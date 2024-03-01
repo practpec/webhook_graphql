@@ -9,21 +9,29 @@ export const usersGQLSchema = buildSchema(`
     }
 
     type Query {
-        users: usersInfoResponse!
+        users(page: Int!, limit: Int!): usersInfoResponse!
         user(id: String!): User!
     }
 
     type usersInfoResponse {
         success: Boolean!
         total: Int!
+        page: Int!
+        limit: Int!
         users: [User!]!
     }
 
     type Mutation {
-        regUser(username: String!, email: String!, password: String!): User!
-        loginUser(email: String!, password: String!): User!
-        updateUser(id: String!, username: String, email: String, password: String): User!
-        deleteUser(id: String!): deleteResponse!
+        regUser(username: String!, email: String!, password: String!, webhook: String!): User!
+        loginUser(email: String!, password: String!): loginResponse!
+        updateUser(id: String!, username: String, email: String, password: String, webhook: String!): User!
+        deleteUser(id: String!, webhook: String!): deleteResponse!
+    }
+
+    type loginResponse {
+        success: Boolean!
+        user: User!
+        token: String!
     }
 
     type deleteResponse {
@@ -31,5 +39,4 @@ export const usersGQLSchema = buildSchema(`
         message: String!
         id: String!
     }
-
 `)

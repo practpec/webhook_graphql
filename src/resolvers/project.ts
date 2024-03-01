@@ -3,15 +3,15 @@ import { Project } from "../model/projects";
 interface Args {
     id: string;
     name: string;
-    createdBy:string;
+    createdBy: string;
 }
 
 export const ProjectsResolver = {
-    Query : {
+    Query: {
         projects: async () => {
             try {
                 const projects = await Project.find({});
-                if (!projects) throw new Error('No products found');
+                if (!projects) throw new Error('No projects found');
                 return {
                     success: true,
                     total: projects.length,
@@ -22,7 +22,7 @@ export const ProjectsResolver = {
             }
         },
 
-        project: async (_ : any, args : Args) => {
+        project: async (_: any, args: Args) => {
             try {
                 if (!args.id) throw new Error('No id provided');
                 const project = await Project.findById(args.id);
@@ -34,11 +34,11 @@ export const ProjectsResolver = {
         }
     },
 
-    Mutation : {
-        addProject: async (_ : any, args : Args) => {
+    Mutation: {
+        addProject: async (_: any, args: Args) => {
             try {
-                const project = await Project.findOne({name: args.name});
-                if (project) throw new Error('Product already exists');
+                const project = await Project.findOne({ name: args.name });
+                if (project) throw new Error('Project already exists');
                 const newProject = await Project.create({
                     name: args.name,
                     createdBy: args.createdBy
@@ -49,25 +49,25 @@ export const ProjectsResolver = {
             }
         },
 
-        updateProject: async (_ : any, args : Args) => {
+        updateProject: async (_: any, args: Args) => {
             try {
                 const id = args.id;
                 if (!id) throw new Error('No id provided');
                 const project = await Project.findById(args.id);
                 if (!project) throw new Error('No project found');
-                const updateProject = await Project.findByIdAndUpdate(id, {...args}, {new: true, runValidators : true});
+                const updateProject = await Project.findByIdAndUpdate(id, { ...args }, { new: true, runValidators: true });
                 return updateProject;
             } catch (error) {
                 console.log(error)
             }
         },
 
-        deleteProject: async (_ : any, args : Args) => {
+        deleteProject: async (_: any, args: Args) => {
             try {
                 const id = args.id;
                 if (!id) throw new Error('No id provided');
                 const project = await Project.findById(args.id);
-                if (!project) throw new Error('No product found');
+                if (!project) throw new Error('No project found');
                 const deleteProject = await Project.findByIdAndDelete(id);
                 return {
                     success: true,

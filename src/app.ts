@@ -24,7 +24,7 @@ const start = async () => {
             context, 
         });
 
-        console.log(`Servidro corriendo en el puerto ${PORT}`)
+        console.log(`Servidor corriendo en el puerto ${PORT}`)
     } catch (error) {
         console.log(error)
     }

@@ -5,30 +5,35 @@ interface Args {
     name: string;
     description: string;
     idProject: string;
-    createdBy:string;
+    createdBy: string;
+    page: number;
+    limit: number;
 }
 
 export const TaskResolver = {
-    Query : {
-        tasks: async () => {
+    Query: {
+        tasks: async (_: any, args: Args) => {
             try {
-                const tasks = await Task.find({});
+                const startIndex = (args.page - 1) * args.limit;
+                const tasks = await Task.find({}).skip(startIndex).limit(args.limit);
                 if (!tasks) throw new Error('No tasks found');
                 return {
                     success: true,
                     total: tasks.length,
-                    tasks
+                    tasks,
+                    page: args.page,
+                    limit: args.limit
                 };
             } catch (error) {
                 throw error;
             }
         },
 
-        task: async (_ : any, args : Args) => {
+        task: async (_: any, args: Args) => {
             try {
                 if (!args.id) throw new Error('No id provided');
                 const task = await Task.findById(args.id);
-                if (!task) throw new Error('No product found');
+                if (!task) throw new Error('No task found');
                 return task;
             } catch (error) {
                 throw error;
@@ -36,11 +41,11 @@ export const TaskResolver = {
         }
     },
 
-    Mutation : {
-        addTask: async (_ : any, args : Args) => {
+    Mutation: {
+        addTask: async (_: any, args: Args) => {
             try {
-                const task = await Task.findOne({name: args.name});
-                if (task) throw new Error('Product already exists');
+                const task = await Task.findOne({ name: args.name });
+                if (task) throw new Error('Task already exists');
                 const newTask = await Task.create({
                     name: args.name,
                     description: args.description,
@@ -53,20 +58,20 @@ export const TaskResolver = {
             }
         },
 
-        updateTask: async (_ : any, args : Args) => {
+        updateTask: async (_: any, args: Args) => {
             try {
                 const id = args.id;
                 if (!id) throw new Error('No id provided');
                 const task = await Task.findById(args.id);
                 if (!task) throw new Error('No task found');
-                const updateTask = await Task.findByIdAndUpdate(id, {...args}, {new: true, runValidators : true});
+                const updateTask = await Task.findByIdAndUpdate(id, { ...args }, { new: true, runValidators: true });
                 return updateTask;
             } catch (error) {
                 console.log(error)
             }
         },
 
-        deleteTask: async (_ : any, args : Args) => {
+        deleteTask: async (_: any, args: Args) => {
             try {
                 const id = args.id;
                 if (!id) throw new Error('No id provided');

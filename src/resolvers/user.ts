@@ -1,5 +1,6 @@
-import {User} from '../model/user';
-import {createPasswordHash } from '../utils/bcrypt/createPasswordHash.util'
+import { User } from '../model/user';
+import { createPasswordHash } from '../utils/bcrypt/createPasswordHash.util'
+import { notifyEvent } from '../utils/notifyEvent';
 import { comparePassword } from '../utils/bcrypt/compareCredentials.util';
 import { createJwt } from '../utils/jwt/createJwt.util';
 import dotenv from "dotenv";
@@ -13,25 +14,31 @@ interface Args {
     username: string;
     email: string;
     password: string;
+    page: number;
+    limit: number;
+    webhook: string;
 }
 
 export const UsersResolver = {
-    Query : {
-        users: async () => {
+    Query: {
+        users: async (_: any, args: Args) => {
             try {
-                const users = await User.find({});
+                const startIndex = (args.page - 1) * args.limit;
+                const users = await User.find({}).skip(startIndex).limit(args.limit);
                 if (!users) throw new Error('No users found');
                 return {
                     success: true,
                     total: users.length,
-                    users
+                    users,
+                    page: args.page,
+                    limit: args.limit
                 };
             } catch (error) {
                 throw error;
             }
-        },    
+        },
 
-        user: async (_ : any, args : Args) => {
+        user: async (_: any, args: Args) => {
             try {
                 if (!args.id) throw new Error('No id provided');
                 const user = await User.findById(args.id);
@@ -43,10 +50,10 @@ export const UsersResolver = {
         }
     },
 
-    Mutation : {
-        regUser: async (_ : any, args : Args) => {
+    Mutation: {
+        regUser: async (_: any, args: Args) => {
             try {
-                const user = await User.findOne({email: args.email});
+                const user = await User.findOne({ email: args.email });
                 if (user) throw new Error('User already exists');
                 const passwordYes = createPasswordHash(args.password)
                 const newUser = await User.create({
@@ -54,48 +61,61 @@ export const UsersResolver = {
                     email: args.email,
                     password: passwordYes
                 })
+                //webhook para enviar mensaje a Discord
+                await notifyEvent(`Se ha registrado el usuario ${args.username}`, args.webhook);
                 return newUser;
             } catch (error) {
                 throw error;
             }
         },
 
-        loginUser: async (_ : any, args : Args) => {
+        loginUser: async (_: any, args: Args) => {
             try {
-                const user = await User.findOne({email: args.email});
+                const user = await User.findOne({ email: args.email });
                 if (!user) throw new Error('User not found');
                 const validPassword = await bcrypt.compare(args.password, user.password);
                 if (!validPassword) {
-                    throw new Error('Contraseña incorrecta');
+                    throw new Error('Incorrect password');
                 }
                 const jwtSecret = process.env.JWT_SECRET || '';
                 const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: '1h' });
-                return token;
+                return {
+                    success: true,
+                    user,
+                    token
+                };
             } catch (error) {
                 throw error;
             }
         },
 
-        updateUser: async (_ : any, args : Args) => {
+        updateUser: async (_: any, args: Args) => {
             try {
                 const id = args.id;
                 if (!id) throw new Error('No id provided');
                 const user = await User.findById(args.id);
                 if (!user) throw new Error('User not found');
-                const updateUser = await User.findByIdAndUpdate(id, {...args}, {new: true, runValidators: true});
+                const newPassword = await bcrypt.hash(args.password, 10);
+                const updateUser = await User.findByIdAndUpdate(id, {
+                    username: args.username,
+                    email: args.email,
+                    password: newPassword
+                }, { new: true, runValidators: true });
+                await notifyEvent(`Se ha actualizado el usuario ${args.username}`, args.webhook);
                 return updateUser;
             } catch (error) {
                 throw error;
             }
         },
 
-        deleteUser: async (_ : any, args : Args) => {
+        deleteUser: async (_: any, args: Args) => {
             try {
                 const id = args.id;
                 if (!id) throw new Error('No id provided');
                 const user = await User.findById(args.id);
                 if (!user) throw new Error('User not found');
                 const deleteUser = await User.findByIdAndDelete(id);
+                await notifyEvent(`Se ha eliminado el usuario ${args.username}`, args.webhook);
                 return {
                     success: true,
                     message: 'User deleted successfully',

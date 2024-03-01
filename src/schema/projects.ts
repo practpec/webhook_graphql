@@ -1,4 +1,4 @@
-import {buildSchema} from "graphql"
+import { buildSchema } from "graphql"
 
 export const projectsGQLSchema = buildSchema(`
     type Project {
@@ -19,8 +19,8 @@ export const projectsGQLSchema = buildSchema(`
     }
 
     type Mutation {
-        addProject(name: String!, createdBy: String!): Project!
-        updateProject(id: String!, name: String, createdBy: String): Project!
+        addProject(name: String!, createdBy: String): Project!
+        updateProject(id: String!, name: String!): Project!
         deleteProject(id: String!): deleteResponse!
     }
 
