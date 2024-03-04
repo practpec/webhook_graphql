@@ -22,10 +22,10 @@ export const usersGQLSchema = buildSchema(`
     }
 
     type Mutation {
-        regUser(username: String!, email: String!, password: String!, webhook: String!): User!
+        regUser(username: String!, email: String!, password: String!): User!
         loginUser(email: String!, password: String!): loginResponse!
-        updateUser(id: String!, username: String, email: String, password: String, webhook: String!): User!
-        deleteUser(id: String!, webhook: String!): deleteResponse!
+        updateUser(id: String!, username: String, email: String, password: String): User!
+        deleteUser(id: String!): deleteResponse!
     }
 
     type loginResponse {

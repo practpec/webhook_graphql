@@ -1,4 +1,6 @@
 import { Task } from "../model/task";
+import { WebhookEvent } from "../model/webhookEvent";
+import { notifyEvent } from '../utils/notifyEvent';
 
 interface Args {
     id: string;
@@ -52,6 +54,10 @@ export const TaskResolver = {
                     idProject: args.idProject,
                     createdBy: args.createdBy
                 })
+                const webhooks = await WebhookEvent.find({ event: 'createTask' });
+                for (const webhook of webhooks) {
+                    await notifyEvent(webhook.webhookUrl, `Se ha creado una nueva tarea ${args.name}`);
+                }
                 return newTask;
             } catch (error) {
                 throw error;

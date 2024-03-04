@@ -1,4 +1,5 @@
 import { User } from '../model/user';
+import { WebhookEvent } from "../model/webhookEvent";
 import { createPasswordHash } from '../utils/bcrypt/createPasswordHash.util'
 import { notifyEvent } from '../utils/notifyEvent';
 import { comparePassword } from '../utils/bcrypt/compareCredentials.util';
@@ -62,7 +63,10 @@ export const UsersResolver = {
                     password: passwordYes
                 })
                 //webhook para enviar mensaje a Discord
-                await notifyEvent(`Se ha registrado el usuario ${args.username}`, args.webhook);
+                const webhooks = await WebhookEvent.find({ event: 'createUser' });
+                for (const webhook of webhooks) {
+                    await notifyEvent(webhook.webhookUrl, `Se ha registrado un nuevo usuario ${args.username}`);
+                }
                 return newUser;
             } catch (error) {
                 throw error;
@@ -101,7 +105,6 @@ export const UsersResolver = {
                     email: args.email,
                     password: newPassword
                 }, { new: true, runValidators: true });
-                await notifyEvent(`Se ha actualizado el usuario ${args.username}`, args.webhook);
                 return updateUser;
             } catch (error) {
                 throw error;
@@ -115,7 +118,6 @@ export const UsersResolver = {
                 const user = await User.findById(args.id);
                 if (!user) throw new Error('User not found');
                 const deleteUser = await User.findByIdAndDelete(id);
-                await notifyEvent(`Se ha eliminado el usuario ${args.username}`, args.webhook);
                 return {
                     success: true,
                     message: 'User deleted successfully',

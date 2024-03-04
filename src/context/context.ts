@@ -14,7 +14,7 @@ export default async ({ req, _res }: any) => {
   const token = req.headers.authorization || "";
   const user = await verifyToken(token);
   if (!user) {
-    throw new GraphQLError("No se a inicado sesión", {
+    throw new GraphQLError("Access denied", {
       extensions: {
         code: "UNAUTHENTICATED",
       },

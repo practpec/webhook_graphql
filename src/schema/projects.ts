@@ -4,7 +4,7 @@ export const projectsGQLSchema = buildSchema(`
     type Project {
         id: String!
         name: String!
-        createdBy: String!
+        createdBy: String
     }
 
     type Query {

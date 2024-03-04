@@ -1,4 +1,6 @@
 import { Project } from "../model/projects";
+import { WebhookEvent } from "../model/webhookEvent";
+import { notifyEvent } from '../utils/notifyEvent';
 
 interface Args {
     id: string;
@@ -43,6 +45,10 @@ export const ProjectsResolver = {
                     name: args.name,
                     createdBy: args.createdBy
                 })
+                const webhooks = await WebhookEvent.find({ event: 'createProject' });
+                for (const webhook of webhooks) {
+                    await notifyEvent(webhook.webhookUrl, `Se ha creado un nuevo proyecto ${args.name}`);
+                }
                 return newProject;
             } catch (error) {
                 throw error;
